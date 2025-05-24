@@ -10,43 +10,37 @@
   <div class="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
     <h1 class="text-2xl font-bold mb-6 text-center">📹 คิวตัดต่อวิดีโอ</h1>
 
-    <!-- Form -->
+    <!-- ฟอร์ม -->
     <form id="jobForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <input type="text" id="requester" placeholder="Requester" required
-             class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+             class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
       <input type="text" id="jobDesc" placeholder="Job Description" required
-             class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+             class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
       <input type="date" id="jobDate" required
-             class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+             class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
       <input type="text" id="remarks" placeholder="Remarks"
-             class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+             class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
       <div class="md:col-span-2 text-right">
         <button type="submit"
-                class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition">
+                class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
           ➕ เพิ่มคิวงาน
         </button>
       </div>
     </form>
 
-    <!-- Table -->
+    <!-- ตาราง -->
     <table class="min-w-full table-auto border-collapse border border-gray-300">
       <thead class="bg-gray-200">
         <tr>
+          <th class="border border-gray-300 px-4 py-2"></th>
           <th class="border border-gray-300 px-4 py-2 text-left">Requester</th>
           <th class="border border-gray-300 px-4 py-2 text-left">Job Description</th>
           <th class="border border-gray-300 px-4 py-2 text-left">Job Received Date</th>
           <th class="border border-gray-300 px-4 py-2 text-left">Remarks</th>
+          <th class="border border-gray-300 px-4 py-2 text-center">Action</th>
         </tr>
       </thead>
-      <tbody id="jobTableBody">
-        <!-- ข้อมูลตัวอย่าง -->
-        <tr class="hover:bg-gray-100">
-          <td class="border border-gray-300 px-4 py-2"></td>
-          <td class="border border-gray-300 px-4 py-2"></td>
-          <td class="border border-gray-300 px-4 py-2"></td>
-          <td class="border border-gray-300 px-4 py-2"></td>
-        </tr>
-      </tbody>
+      <tbody id="jobTableBody"></tbody>
     </table>
   </div>
 
@@ -54,27 +48,66 @@
     const form = document.getElementById("jobForm");
     const tableBody = document.getElementById("jobTableBody");
 
+    function loadJobs() {
+      const jobs = JSON.parse(localStorage.getItem("videoJobs")) || [];
+      jobs.forEach((job, index) => addRowToTable(job, index));
+    }
+
+    function saveJobs(jobs) {
+      localStorage.setItem("videoJobs", JSON.stringify(jobs));
+    }
+
+    function addRowToTable(job, index) {
+      const newRow = document.createElement("tr");
+      newRow.className = "hover:bg-gray-100";
+
+      newRow.innerHTML = `
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-500">
+        </td>
+        <td class="border border-gray-300 px-4 py-2">${job.requester}</td>
+        <td class="border border-gray-300 px-4 py-2">${job.jobDesc}</td>
+        <td class="border border-gray-300 px-4 py-2">${job.jobDate}</td>
+        <td class="border border-gray-300 px-4 py-2">${job.remarks || "—"}</td>
+        <td class="border border-gray-300 px-4 py-2 text-center">
+          <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600" onclick="deleteJob(${index})">ลบ</button>
+        </td>
+      `;
+      tableBody.appendChild(newRow);
+    }
+
+    function deleteJob(index) {
+      const jobs = JSON.parse(localStorage.getItem("videoJobs")) || [];
+      jobs.splice(index, 1);
+      saveJobs(jobs);
+      refreshTable();
+    }
+
+    function refreshTable() {
+      tableBody.innerHTML = "";
+      loadJobs();
+    }
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
 
-      const requester = document.getElementById("requester").value.trim();
-      const jobDesc = document.getElementById("jobDesc").value.trim();
-      const jobDate = document.getElementById("jobDate").value;
-      const remarks = document.getElementById("remarks").value.trim();
+      const job = {
+        requester: document.getElementById("requester").value.trim(),
+        jobDesc: document.getElementById("jobDesc").value.trim(),
+        jobDate: document.getElementById("jobDate").value,
+        remarks: document.getElementById("remarks").value.trim()
+      };
 
-      if (requester && jobDesc && jobDate) {
-        const newRow = document.createElement("tr");
-        newRow.className = "hover:bg-gray-100";
-        newRow.innerHTML = `
-          <td class="border border-gray-300 px-4 py-2">${requester}</td>
-          <td class="border border-gray-300 px-4 py-2">${jobDesc}</td>
-          <td class="border border-gray-300 px-4 py-2">${jobDate}</td>
-          <td class="border border-gray-300 px-4 py-2">${remarks || "—"}</td>
-        `;
-        tableBody.appendChild(newRow);
+      if (job.requester && job.jobDesc && job.jobDate) {
+        const jobs = JSON.parse(localStorage.getItem("videoJobs")) || [];
+        jobs.push(job);
+        saveJobs(jobs);
+        refreshTable();
         form.reset();
       }
     });
+
+    window.onload = loadJobs;
   </script>
 </body>
 </html>
