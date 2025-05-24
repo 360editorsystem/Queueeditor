@@ -12,81 +12,21 @@
 
     <!-- ฟอร์ม -->
     <form id="jobForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-      <input type="text" id="requester" placeholder="Requester" required
-             class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
-      <input type="text" id="jobDesc" placeholder="Job Description" required
-             class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
-      <input type="date" id="jobDate" required
-             class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
-      <input type="text" id="remarks" placeholder="Remarks"
-             class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
+      <input type="text" id="requester" placeholder="Requester" required class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
+      <input type="text" id="jobDesc" placeholder="Job Description" required class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
+      <input type="date" id="jobDate" required class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
+      <input type="text" id="remarks" placeholder="Remarks" class="border border-gray-300 rounded px-4 py-2 focus:outline-none" />
       <div class="md:col-span-2 text-right">
-        <button type="submit"
-                class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
-          ➕ เพิ่มคิวงาน
-        </button>
+        <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">➕ เพิ่มคิวงาน</button>
       </div>
     </form>
 
-    <!-- ตาราง -->
-    <table class="min-w-full table-auto border-collapse border border-gray-300">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="border border-gray-300 px-4 py-2"></th>
-          <th class="border border-gray-300 px-4 py-2 text-left">Requester</th>
-          <th class="border border-gray-300 px-4 py-2 text-left">Job Description</th>
-          <th class="border border-gray-300 px-4 py-2 text-left">Job Received Date</th>
-          <th class="border border-gray-300 px-4 py-2 text-left">Remarks</th>
-          <th class="border border-gray-300 px-4 py-2 text-center">Action</th>
-        </tr>
-      </thead>
-      <tbody id="jobTableBody"></tbody>
-    </table>
+    <p id="successMessage" class="text-green-600 font-medium hidden text-center">✅ ส่งข้อมูลเรียบร้อยแล้ว</p>
   </div>
 
   <script>
     const form = document.getElementById("jobForm");
-    const tableBody = document.getElementById("jobTableBody");
-
-    function loadJobs() {
-      const jobs = JSON.parse(localStorage.getItem("videoJobs")) || [];
-      jobs.forEach((job, index) => addRowToTable(job, index));
-    }
-
-    function saveJobs(jobs) {
-      localStorage.setItem("videoJobs", JSON.stringify(jobs));
-    }
-
-    function addRowToTable(job, index) {
-      const newRow = document.createElement("tr");
-      newRow.className = "hover:bg-gray-100";
-
-      newRow.innerHTML = `
-        <td class="border border-gray-300 px-4 py-2 text-center">
-          <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-500">
-        </td>
-        <td class="border border-gray-300 px-4 py-2">${job.requester}</td>
-        <td class="border border-gray-300 px-4 py-2">${job.jobDesc}</td>
-        <td class="border border-gray-300 px-4 py-2">${job.jobDate}</td>
-        <td class="border border-gray-300 px-4 py-2">${job.remarks || "—"}</td>
-        <td class="border border-gray-300 px-4 py-2 text-center">
-          <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600" onclick="deleteJob(${index})">ลบ</button>
-        </td>
-      `;
-      tableBody.appendChild(newRow);
-    }
-
-    function deleteJob(index) {
-      const jobs = JSON.parse(localStorage.getItem("videoJobs")) || [];
-      jobs.splice(index, 1);
-      saveJobs(jobs);
-      refreshTable();
-    }
-
-    function refreshTable() {
-      tableBody.innerHTML = "";
-      loadJobs();
-    }
+    const successMessage = document.getElementById("successMessage");
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -98,16 +38,22 @@
         remarks: document.getElementById("remarks").value.trim()
       };
 
-      if (job.requester && job.jobDesc && job.jobDate) {
-        const jobs = JSON.parse(localStorage.getItem("videoJobs")) || [];
-        jobs.push(job);
-        saveJobs(jobs);
-        refreshTable();
-        form.reset();
-      }
+      fetch("https://script.google.com/macros/s/AKfycbyYE4cZfD0ksBKehd7K22dD1PPXQ6ZsHEVQIl-6DuaU1yWMFFkIz_l7oGjDPkKJbxrpig/exec", {
+        method: "POST",
+        body: JSON.stringify(job),
+        headers: { "Content-Type": "application/json" }
+      })
+        .then(res => res.text())
+        .then(data => {
+          successMessage.classList.remove("hidden");
+          setTimeout(() => successMessage.classList.add("hidden"), 3000);
+          form.reset();
+        })
+        .catch(err => {
+          console.error("Error:", err);
+          alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
+        });
     });
-
-    window.onload = loadJobs;
   </script>
 </body>
 </html>
