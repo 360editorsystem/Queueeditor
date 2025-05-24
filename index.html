@@ -2,39 +2,78 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>Video Edit Queue</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ระบบคิวตัดต่อวิดีโอ</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-    h1 { text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-    input, textarea, button { width: 100%; padding: 8px; margin: 5px 0; }
-    .form { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; }
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: #333;
+    }
+
+    .form-container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      margin-bottom: 30px;
+    }
+
+    input, textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
   </style>
 </head>
 <body>
 
   <h1>📋 ระบบคิวตัดต่อวิดีโอ</h1>
 
-  <div class="form">
-    <label>ชื่อผู้แจ้ง</label>
-    <input type="text" id="requester" />
-
-    <label>รายละเอียดงาน</label>
-    <textarea id="jobDesc"></textarea>
-
-    <label>วันที่ต้องการ</label>
-    <input type="date" id="jobDate" />
-
-    <label>หมายเหตุ</label>
-    <textarea id="remarks"></textarea>
-
-    <button onclick="submitForm()">📨 ส่งคำขอ</button>
-    <p id="msg" style="color: green;"></p>
+  <div class="form-container">
+    <input id="requester" placeholder="ชื่อผู้แจ้ง" />
+    <textarea id="jobDesc" placeholder="รายละเอียดงาน"></textarea>
+    <input id="jobDate" type="date" />
+    <textarea id="remarks" placeholder="หมายเหตุ"></textarea>
+    <button id="submitBtn">📤 ส่งคำขอ</button>
   </div>
 
-  <h2>📄 รายการที่แจ้งไว้</h2>
+  <h2>📋 รายการที่แจ้งไว้</h2>
   <table id="queueTable">
     <thead>
       <tr>
@@ -50,9 +89,31 @@
   </table>
 
   <script>
-   const API_URL = "https://script.google.com/macros/s/AKfycbyeeB2uicgowE9SLKNnum_ITbLqHXjR5RjJobuVLNNdvnVGoZn5fNd1cB67AiiF4FDUHA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyeeB2uicgowE9SLKNnum_ITbLqHXjR5RjJobuVLNNdvnVGoZn5fNd1cB67AiiF4FDUHA/exec";
 
-    async function submitForm() {
+    function fetchData() {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.querySelector("#queueTable tbody");
+          tbody.innerHTML = "";
+          data.forEach(item => {
+            const row = `
+              <tr>
+                <td>${item.timestamp || ""}</td>
+                <td>${item.requester || ""}</td>
+                <td>${item.jobDesc || ""}</td>
+                <td>${item.jobDate || ""}</td>
+                <td>${item.remarks || ""}</td>
+                <td>${item.status || ""}</td>
+              </tr>
+            `;
+            tbody.innerHTML += row;
+          });
+        });
+    }
+
+    document.getElementById("submitBtn").addEventListener("click", () => {
       const data = {
         requester: document.getElementById("requester").value,
         jobDesc: document.getElementById("jobDesc").value,
@@ -60,38 +121,23 @@
         remarks: document.getElementById("remarks").value,
       };
 
-      const res = await fetch(API_URL, {
+      fetch(API_URL, {
         method: "POST",
         body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" }
-      });
+        headers: {
+          "Content-Type": "application/json",
+        }
+      })
+        .then(res => res.text())
+        .then(msg => {
+          alert("✅ ส่งข้อมูลเรียบร้อย: " + msg);
+          fetchData();
+        })
+        .catch(err => alert("❌ เกิดข้อผิดพลาด: " + err));
+    });
 
-      const text = await res.text();
-      document.getElementById("msg").textContent = text;
-      loadQueue();
-    }
-
-    async function loadQueue() {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-
-      const tbody = document.querySelector("#queueTable tbody");
-      tbody.innerHTML = "";
-      data.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row.Timestamp}</td>
-          <td>${row.requester}</td>
-          <td>${row.jobDesc}</td>
-          <td>${row.jobDate}</td>
-          <td>${row.remarks}</td>
-          <td>${row.status}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    loadQueue(); // โหลดรายการเมื่อเปิดหน้า
+    fetchData(); // Load data when page starts
   </script>
+
 </body>
 </html>
