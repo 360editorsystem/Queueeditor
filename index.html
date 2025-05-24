@@ -7,15 +7,18 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     h1 { text-align: center; }
-    form { max-width: 600px; margin: 0 auto 40px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+    form { max-width: 600px; margin: 0 auto 40px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9; }
     label { display: block; margin-bottom: 5px; font-weight: bold; }
-    input, textarea { width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; }
-    button { padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background-color: #218838; }
+    input, textarea, select { width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #f4f4f4; }
     tr:nth-child(even) { background-color: #fafafa; }
+    .status-pending { color: orange; font-weight: bold; }
+    .status-inprogress { color: blue; font-weight: bold; }
+    .status-done { color: green; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -34,6 +37,13 @@
     <label for="remarks">Remarks</label>
     <textarea id="remarks" name="Remarks"></textarea>
 
+    <label for="status">Status</label>
+    <select id="status" name="Status" required>
+      <option value="Pending">Pending</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Done">Done</option>
+    </select>
+
     <button type="submit">Submit Request</button>
   </form>
 
@@ -44,6 +54,7 @@
         <th>Job Description</th>
         <th>Job Received Date</th>
         <th>Remarks</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody>
@@ -52,7 +63,7 @@
   </table>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzsKKJEkULwAjnNc5XxChXiMrXQYOeRnWs1sgk_1qv4NkwUsOgGDdPa-8ncT0I8wRQgfA/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxhp7NashHITKhE0AVVzpBbQEaodPA4voSXDvf2wXh39oyCmpnOGkICKjpm17TEe0jwCA/exec';
 
     // Load existing data
     fetch(scriptURL)
@@ -61,9 +72,13 @@
         const tbody = document.querySelector('#queue-table tbody');
         data.forEach(row => {
           const tr = document.createElement('tr');
-          const fields = ['Requester', 'Job Description', 'Job Received Date', 'Remarks'];
+          const fields = ['Requester', 'Job Description', 'Job Received Date', 'Remarks', 'Status'];
           fields.forEach(field => {
             const td = document.createElement('td');
+            if (field === 'Status') {
+              const status = (row[field] || '').toLowerCase();
+              td.className = 'status-' + status.replace(/\s+/g, '');
+            }
             td.textContent = row[field] || '';
             tr.appendChild(td);
           });
@@ -91,11 +106,5 @@
         });
     });
   </script>
-
-  <!-- Instructions:
-    1. Google Apps Script URL already integrated.
-    2. Apps Script must support both GET (for display) and POST (for form submission).
-    3. Deploy Apps Script as Web App and set access to "Anyone".
-  -->
 </body>
 </html>
