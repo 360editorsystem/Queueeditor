@@ -63,7 +63,7 @@
   </table>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxeYMXkkawHPugL8CpiEYHGns6c_gIaIncsF2iVAJU23ux3iRdUs221BQCloUd9zJFftQ/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz1B6c1JDAeXiqcDozr5j8WzuKIcNekm9Y7KlvC6sExxIFvnRQGxAbP05p4aYaLqWc0xQ/exec';
 
     // Load existing data
     fetch(scriptURL)
@@ -95,10 +95,15 @@
       const form = e.target;
       const formData = new FormData(form);
       fetch(scriptURL, { method: 'POST', body: formData })
-        .then(response => {
-          alert('Request submitted successfully!');
-          form.reset();
-          location.reload();
+        .then(response => response.json())
+        .then(data => {
+          if (data.result === 'success') {
+            alert('Request submitted successfully!');
+            form.reset();
+            location.reload();
+          } else {
+            throw new Error(data.message || 'Unknown error');
+          }
         })
         .catch(error => {
           console.error('Error submitting request:', error);
