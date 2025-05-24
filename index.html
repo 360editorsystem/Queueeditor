@@ -1,128 +1,97 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>ระบบคิวตัดต่อวิดีโอ</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <title>Video Edit Queue</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+    h1 { text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    input, textarea, button { width: 100%; padding: 8px; margin: 5px 0; }
+    .form { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; }
+  </style>
 </head>
-<body class="bg-gray-100 p-6 text-sm">
+<body>
 
-  <div class="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
-    <h1 class="text-2xl font-bold mb-6 text-center">📹 ระบบคิวตัดต่อวิดีโอ</h1>
+  <h1>📋 ระบบคิวตัดต่อวิดีโอ</h1>
 
-    <!-- ฟอร์ม -->
-    <form id="jobForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-      <input id="requester" placeholder="Requester" required class="border px-3 py-2 rounded" />
-      <input id="jobDesc" placeholder="Job Description" required class="border px-3 py-2 rounded" />
-      <input type="date" id="jobDate" required class="border px-3 py-2 rounded" />
-      <input id="remarks" placeholder="Remarks" class="border px-3 py-2 rounded" />
-      <div class="md:col-span-2 text-right">
-        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded">➕ เพิ่มคิวงาน</button>
-      </div>
-    </form>
+  <div class="form">
+    <label>ชื่อผู้แจ้ง</label>
+    <input type="text" id="requester" />
 
-    <!-- สถิติ -->
-    <div class="flex justify-between mb-4 font-medium">
-      <div>งานทั้งหมด: <span id="total">0</span></div>
-      <div>เสร็จแล้ว: <span id="done">0</span></div>
-      <div>ค้างอยู่: <span id="pending">0</span></div>
-    </div>
+    <label>รายละเอียดงาน</label>
+    <textarea id="jobDesc"></textarea>
 
-    <!-- ตาราง -->
-    <table class="w-full table-auto border text-center">
-      <thead class="bg-gray-200">
-        <tr>
-          <th>Requester</th>
-          <th>Job</th>
-          <th>Date</th>
-          <th>Remarks</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="jobTable" class="bg-white"></tbody>
-    </table>
+    <label>วันที่ต้องการ</label>
+    <input type="date" id="jobDate" />
+
+    <label>หมายเหตุ</label>
+    <textarea id="remarks"></textarea>
+
+    <button onclick="submitForm()">📨 ส่งคำขอ</button>
+    <p id="msg" style="color: green;"></p>
   </div>
 
+  <h2>📄 รายการที่แจ้งไว้</h2>
+  <table id="queueTable">
+    <thead>
+      <tr>
+        <th>เวลาแจ้ง</th>
+        <th>ผู้แจ้ง</th>
+        <th>งาน</th>
+        <th>วันที่ต้องการ</th>
+        <th>หมายเหตุ</th>
+        <th>สถานะ</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzJkVDjDbVv3uZe8f6NFTJMP8s3TagU1wML9YYGkF1QqkNcAqHAisbv6ANZkRF1GU7BUg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxEQ2TITcfq22saJ7_zrgqPqoYvCr6gLanuzEY6EnWadIATXy-HAUF2MeLCi0t_ztSp/exec";
 
-    const jobForm = document.getElementById("jobForm");
-    const jobTable = document.getElementById("jobTable");
-    const totalEl = document.getElementById("total");
-    const doneEl = document.getElementById("done");
-    const pendingEl = document.getElementById("pending");
-
-    async function loadJobs() {
-      const res = await fetch(API_URL);
-      const jobs = await res.json();
-      renderJobs(jobs);
-    }
-
-    function renderJobs(jobs) {
-      jobTable.innerHTML = "";
-      let total = 0, done = 0;
-
-      jobs.forEach(job => {
-        total++;
-        if (job.Status === "done") done++;
-
-        const tr = document.createElement("tr");
-        tr.className = job.Status === "done" ? "bg-green-100" : "";
-
-        tr.innerHTML = `
-          <td>${job.Requester}</td>
-          <td>${job["Job Description"]}</td>
-          <td>${job["Job Received Date"]}</td>
-          <td>${job.Remarks}</td>
-          <td>${job.Status}</td>
-          <td>
-            ${job.Status === "pending" ? `<button onclick="markDone(${job.rowIndex})" class="text-green-600">✅ เสร็จ</button>` : ""}
-            <button onclick="deleteJob(${job.rowIndex})" class="text-red-500 ml-2">🗑 ลบ</button>
-          </td>
-        `;
-        jobTable.appendChild(tr);
-      });
-
-      totalEl.textContent = total;
-      doneEl.textContent = done;
-      pendingEl.textContent = total - done;
-    }
-
-    jobForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      const job = {
-        requester: document.getElementById("requester").value.trim(),
-        jobDesc: document.getElementById("jobDesc").value.trim(),
+    async function submitForm() {
+      const data = {
+        requester: document.getElementById("requester").value,
+        jobDesc: document.getElementById("jobDesc").value,
         jobDate: document.getElementById("jobDate").value,
-        remarks: document.getElementById("remarks").value.trim()
+        remarks: document.getElementById("remarks").value,
       };
-      await fetch(API_URL, {
+
+      const res = await fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify(job),
+        body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" }
       });
-      jobForm.reset();
-      loadJobs();
-    });
 
-    async function deleteJob(row) {
-      if (confirm("ต้องการลบรายการนี้หรือไม่?")) {
-        await fetch(`${API_URL}?row=${row}`, { method: "DELETE" });
-        loadJobs();
-      }
+      const text = await res.text();
+      document.getElementById("msg").textContent = text;
+      loadQueue();
     }
 
-    async function markDone(row) {
-      await fetch(API_URL, {
-        method: "PUT",
-        body: JSON.stringify({ row, status: "done" }),
-        headers: { "Content-Type": "application/json" }
+    async function loadQueue() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+
+      const tbody = document.querySelector("#queueTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.Timestamp}</td>
+          <td>${row.requester}</td>
+          <td>${row.jobDesc}</td>
+          <td>${row.jobDate}</td>
+          <td>${row.remarks}</td>
+          <td>${row.status}</td>
+        `;
+        tbody.appendChild(tr);
       });
-      loadJobs();
     }
 
-    loadJobs();
+    loadQueue(); // โหลดรายการเมื่อเปิดหน้า
   </script>
 </body>
 </html>
