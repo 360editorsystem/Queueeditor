@@ -1,64 +1,15 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>ระบบคิวตัดต่อวิดีโอ</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-
-    h1, h2 {
-      color: #333;
-    }
-
-    .form-container {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      max-width: 500px;
-      margin-bottom: 30px;
-    }
-
-    input, textarea {
-      width: 100%;
-      margin: 8px 0;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      background: #4CAF50;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 8px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background: white;
-    }
-
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-
-    th {
-      background: #f0f0f0;
-    }
+    body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+    .form-container, .queue-table { margin-bottom: 30px; }
+    input, textarea { display: block; margin-bottom: 10px; width: 100%; padding: 10px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    button { padding: 5px 10px; margin: 2px; }
   </style>
 </head>
 <body>
@@ -70,10 +21,10 @@
     <textarea id="jobDesc" placeholder="รายละเอียดงาน"></textarea>
     <input id="jobDate" type="date" />
     <textarea id="remarks" placeholder="หมายเหตุ"></textarea>
-    <button id="submitBtn">📤 ส่งคำขอ</button>
+    <button onclick="submitForm()">📨 ส่งคำขอ</button>
   </div>
 
-  <h2>📋 รายการที่แจ้งไว้</h2>
+  <h2>📄 รายการที่แจ้งไว้</h2>
   <table id="queueTable">
     <thead>
       <tr>
@@ -83,6 +34,7 @@
         <th>วันที่ต้องการ</th>
         <th>หมายเหตุ</th>
         <th>สถานะ</th>
+        <th>อัปเดตสถานะ</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -91,52 +43,55 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyeeB2uicgowE9SLKNnum_ITbLqHXjR5RjJobuVLNNdvnVGoZn5fNd1cB67AiiF4FDUHA/exec";
 
-    function fetchData() {
+    function submitForm() {
+      const payload = {
+        requester: document.getElementById("requester").value,
+        jobDesc: document.getElementById("jobDesc").value,
+        jobDate: document.getElementById("jobDate").value,
+        remarks: document.getElementById("remarks").value
+      };
+      fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" }
+      }).then(() => {
+        alert("ส่งคำขอแล้ว");
+        loadData();
+      });
+    }
+
+    function loadData() {
       fetch(API_URL)
         .then(res => res.json())
         .then(data => {
           const tbody = document.querySelector("#queueTable tbody");
           tbody.innerHTML = "";
-          data.forEach(item => {
-            const row = `
-              <tr>
-                <td>${item.timestamp || ""}</td>
-                <td>${item.requester || ""}</td>
-                <td>${item.jobDesc || ""}</td>
-                <td>${item.jobDate || ""}</td>
-                <td>${item.remarks || ""}</td>
-                <td>${item.status || ""}</td>
-              </tr>
+          data.forEach(row => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${row.timestamp}</td>
+              <td>${row.requester}</td>
+              <td>${row.jobDesc}</td>
+              <td>${row.jobDate}</td>
+              <td>${row.remarks}</td>
+              <td>${row.status}</td>
+              <td>
+                <button onclick="updateStatus(${row.rowIndex}, 'ดำเนินการอยู่')">ดำเนินการอยู่</button>
+                <button onclick="updateStatus(${row.rowIndex}, 'ติดตามงาน')">ติดตามงาน</button>
+                <button onclick="updateStatus(${row.rowIndex}, 'สำเร็จ')">สำเร็จ</button>
+              </td>
             `;
-            tbody.innerHTML += row;
+            tbody.appendChild(tr);
           });
         });
     }
 
-    document.getElementById("submitBtn").addEventListener("click", () => {
-      const data = {
-        requester: document.getElementById("requester").value,
-        jobDesc: document.getElementById("jobDesc").value,
-        jobDate: document.getElementById("jobDate").value,
-        remarks: document.getElementById("remarks").value,
-      };
+    function updateStatus(rowIndex, newStatus) {
+      fetch(API_URL + `?action=update&row=${rowIndex}&status=${encodeURIComponent(newStatus)}`)
+        .then(() => loadData());
+    }
 
-      fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        }
-      })
-        .then(res => res.text())
-        .then(msg => {
-          alert("✅ ส่งข้อมูลเรียบร้อย: " + msg);
-          fetchData();
-        })
-        .catch(err => alert("❌ เกิดข้อผิดพลาด: " + err));
-    });
-
-    fetchData(); // Load data when page starts
+    loadData();
   </script>
 
 </body>
