@@ -3,74 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <title>ขอคิวงานตัดต่อวิดีโอ</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 20px;
-      background-color: #f9f9f9;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    input[type="text"],
-    input[type="date"],
-    textarea {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      resize: vertical;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 15px;
-      background-color: #007bff;
-      border: none;
-      color: white;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
 </head>
 <body>
   <h1>ขอคิวงานตัดต่อวิดีโอ</h1>
   <form id="queueForm">
-    <label for="requester">ชื่อผู้ขอคิว</label>
-    <input type="text" id="requester" name="requester" required />
+    <label>ชื่อผู้ขอคิว</label><br/>
+    <input type="text" id="requester" name="requester" required /><br/>
 
-    <label for="jobDesc">รายละเอียดงาน</label>
-    <textarea id="jobDesc" name="jobDesc" rows="4" required></textarea>
+    <label>รายละเอียดงาน</label><br/>
+    <textarea id="jobDesc" name="jobDesc" rows="4" required></textarea><br/>
 
-    <label for="jobDate">วันรับงาน</label>
-    <input type="date" id="jobDate" name="jobDate" required />
+    <label>วันรับงาน</label><br/>
+    <input type="date" id="jobDate" name="jobDate" required /><br/>
 
-    <label for="remarks">หมายเหตุ</label>
-    <input type="text" id="remarks" name="remarks" />
+    <label>หมายเหตุ</label><br/>
+    <input type="text" id="remarks" name="remarks" /><br/>
 
     <button type="submit">ส่งคำขอ</button>
   </form>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzxn45JvMlvAkFWUHYVBQdehvJ56lowBW7xF00raGXpSoH1sWryFbpd19Nggwg4YC_mGg/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzsKKJEkULwAjnNc5XxChXiMrXQYOeRnWs1sgk_1qv4NkwUsOgGDdPa-8ncT0I8wRQgfA/exec';
 
     const form = document.getElementById('queueForm');
-
     form.addEventListener('submit', e => {
       e.preventDefault();
 
@@ -84,20 +39,14 @@
       fetch(scriptURL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        mode: 'no-cors',  // สำคัญ: ป้องกัน CORS error แต่จะไม่อ่าน response กลับ
         body: JSON.stringify(data)
       })
-      .then(response => response.json())
-      .then(result => {
-        if (result.result === 'success') {
-          alert('ส่งคำขอเรียบร้อยแล้ว');
-          form.reset();
-        } else {
-          alert('เกิดข้อผิดพลาด: ' + result.message);
-        }
+      .then(() => {
+        alert('ส่งคำขอเรียบร้อยแล้ว');
+        form.reset();
       })
-      .catch(error => {
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-      });
+      .catch(error => alert('เกิดข้อผิดพลาด: ' + error.message));
     });
   </script>
 </body>
