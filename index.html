@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -10,9 +9,9 @@
       max-width: 600px;
       margin: 30px auto;
       padding: 20px;
+      background-color: #f9f9f9;
       border: 1px solid #ddd;
       border-radius: 8px;
-      background-color: #f9f9f9;
     }
     h1 {
       text-align: center;
@@ -68,26 +67,24 @@
   </form>
 
   <script>
-    // เปลี่ยนตรงนี้เป็น URL ของ Google Apps Script Web App ของคุณ
-    const scriptURL = 'PASTE_YOUR_WEB_APP_URL_HERE';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxxYj2PN9XHIW5KtvC_pR84RAqMCK3Mg1-m0WKYo1oOjUl50O9OdAf8_xMr-bSMPGs/exec';
 
     const form = document.getElementById('queueForm');
+
     form.addEventListener('submit', e => {
       e.preventDefault();
 
       const data = {
-        requester: form.requester.value,
-        jobDesc: form.jobDesc.value,
+        requester: form.requester.value.trim(),
+        jobDesc: form.jobDesc.value.trim(),
         jobDate: form.jobDate.value,
-        remarks: form.remarks.value
+        remarks: form.remarks.value.trim()
       };
 
       fetch(scriptURL, {
         method: 'POST',
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
       })
       .then(response => response.json())
       .then(result => {
