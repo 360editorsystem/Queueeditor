@@ -1,106 +1,40 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>ขอคิวงานตัดต่อวิดีโอ</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background-color: #f9f9f9;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    input[type="text"],
-    input[type="date"],
-    textarea {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      resize: vertical;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 15px;
-      background-color: #007bff;
-      border: none;
-      color: white;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>คิวตัดต่อวิดีโอ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>ขอคิวงานตัดต่อวิดีโอ</h1>
-  <form id="queueForm">
-    <label for="requester">ชื่อผู้ขอคิว</label>
-    <input type="text" id="requester" name="requester" required />
-
-    <label for="jobDesc">รายละเอียดงาน</label>
-    <textarea id="jobDesc" name="jobDesc" rows="4" required></textarea>
-
-    <label for="jobDate">วันรับงาน</label>
-    <input type="date" id="jobDate" name="jobDate" required />
-
-    <label for="remarks">หมายเหตุ</label>
-    <input type="text" id="remarks" name="remarks" />
-
-    <button type="submit">ส่งคำขอ</button>
-  </form>
-
-  <script>
-    //const scriptURL = 'https://script.google.com/macros/s/AKfycbxSGt3LGrbUsNDfqlBWi8fqsuO30gFcES3P1cXOlx4yBHnPeH6oiOO8rHDHHYpkcU_E/exec';
-
-    const form = document.getElementById('queueForm');
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-
-      const data = {
-        requester: form.requester.value,
-        jobDesc: form.jobDesc.value,
-        jobDate: form.jobDate.value,
-        remarks: form.remarks.value
-      };
-
-      fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.result === 'success') {
-          alert('ส่งคำขอเรียบร้อยแล้ว');
-          form.reset();
-        } else {
-          alert('เกิดข้อผิดพลาด: ' + result.message);
-        }
-      })
-      .catch(error => {
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-      });
-    });
-  </script>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
+    <h1 class="text-2xl font-bold mb-4 text-center">📹 คิวตัดต่อวิดีโอ</h1>
+    <table class="min-w-full table-auto border-collapse border border-gray-300">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="border border-gray-300 px-4 py-2 text-left">Requester</th>
+          <th class="border border-gray-300 px-4 py-2 text-left">Job Description</th>
+          <th class="border border-gray-300 px-4 py-2 text-left">Job Received Date</th>
+          <th class="border border-gray-300 px-4 py-2 text-left">Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ตัวอย่างข้อมูล -->
+        <tr class="hover:bg-gray-100">
+          <td class="border border-gray-300 px-4 py-2">คุณเอ</td>
+          <td class="border border-gray-300 px-4 py-2">ตัดวิดีโอรีวิวสินค้า</td>
+          <td class="border border-gray-300 px-4 py-2">2025-05-20</td>
+          <td class="border border-gray-300 px-4 py-2">เร่งด่วน</td>
+        </tr>
+        <tr class="hover:bg-gray-100">
+          <td class="border border-gray-300 px-4 py-2">คุณบี</td>
+          <td class="border border-gray-300 px-4 py-2">ไฮไลต์งานสัมมนา</td>
+          <td class="border border-gray-300 px-4 py-2">2025-05-22</td>
+          <td class="border border-gray-300 px-4 py-2">—</td>
+        </tr>
+        <!-- เพิ่มรายการอื่น ๆ ที่นี่ -->
+      </tbody>
+    </table>
+  </div>
 </body>
 </html>
