@@ -7,6 +7,11 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     h1 { text-align: center; }
+    form { max-width: 600px; margin: 0 auto 40px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input, textarea { width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #218838; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #f4f4f4; }
@@ -15,6 +20,23 @@
 </head>
 <body>
   <h1>Video Editing Queue</h1>
+
+  <form id="request-form">
+    <label for="requester">Requester</label>
+    <input type="text" id="requester" name="Requester" required>
+
+    <label for="description">Job Description</label>
+    <textarea id="description" name="Job Description" required></textarea>
+
+    <label for="receivedDate">Job Received Date</label>
+    <input type="date" id="receivedDate" name="Job Received Date" required>
+
+    <label for="remarks">Remarks</label>
+    <textarea id="remarks" name="Remarks"></textarea>
+
+    <button type="submit">Submit Request</button>
+  </form>
+
   <table id="queue-table">
     <thead>
       <tr>
@@ -32,6 +54,7 @@
   <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzsKKJEkULwAjnNc5XxChXiMrXQYOeRnWs1sgk_1qv4NkwUsOgGDdPa-8ncT0I8wRQgfA/exec';
 
+    // Load existing data
     fetch(scriptURL)
       .then(response => response.json())
       .then(data => {
@@ -50,12 +73,29 @@
       .catch(error => {
         console.error('Error fetching data:', error);
       });
+
+    // Handle form submission
+    document.getElementById('request-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      fetch(scriptURL, { method: 'POST', body: formData })
+        .then(response => {
+          alert('Request submitted successfully!');
+          form.reset();
+          location.reload();
+        })
+        .catch(error => {
+          console.error('Error submitting request:', error);
+          alert('There was an error submitting your request.');
+        });
+    });
   </script>
 
   <!-- Instructions:
     1. Google Apps Script URL already integrated.
-    2. Make sure the script is deployed as a Web App and set to allow "Anyone" access.
-    3. Push this index.html to your GitHub repo and enable GitHub Pages.
+    2. Apps Script must support both GET (for display) and POST (for form submission).
+    3. Deploy Apps Script as Web App and set access to "Anyone".
   -->
 </body>
 </html>
