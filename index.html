@@ -8,7 +8,27 @@
 </head>
 <body class="bg-gray-100 p-6">
   <div class="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
-    <h1 class="text-2xl font-bold mb-4 text-center">📹 คิวตัดต่อวิดีโอ</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">📹 คิวตัดต่อวิดีโอ</h1>
+
+    <!-- Form -->
+    <form id="jobForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <input type="text" id="requester" placeholder="Requester" required
+             class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <input type="text" id="jobDesc" placeholder="Job Description" required
+             class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <input type="date" id="jobDate" required
+             class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <input type="text" id="remarks" placeholder="Remarks"
+             class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <div class="md:col-span-2 text-right">
+        <button type="submit"
+                class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition">
+          ➕ เพิ่มคิวงาน
+        </button>
+      </div>
+    </form>
+
+    <!-- Table -->
     <table class="min-w-full table-auto border-collapse border border-gray-300">
       <thead class="bg-gray-200">
         <tr>
@@ -18,23 +38,43 @@
           <th class="border border-gray-300 px-4 py-2 text-left">Remarks</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- ตัวอย่างข้อมูล -->
+      <tbody id="jobTableBody">
+        <!-- ข้อมูลตัวอย่าง -->
         <tr class="hover:bg-gray-100">
           <td class="border border-gray-300 px-4 py-2">คุณเอ</td>
           <td class="border border-gray-300 px-4 py-2">ตัดวิดีโอรีวิวสินค้า</td>
           <td class="border border-gray-300 px-4 py-2">2025-05-20</td>
           <td class="border border-gray-300 px-4 py-2">เร่งด่วน</td>
         </tr>
-        <tr class="hover:bg-gray-100">
-          <td class="border border-gray-300 px-4 py-2">คุณบี</td>
-          <td class="border border-gray-300 px-4 py-2">ไฮไลต์งานสัมมนา</td>
-          <td class="border border-gray-300 px-4 py-2">2025-05-22</td>
-          <td class="border border-gray-300 px-4 py-2">—</td>
-        </tr>
-        <!-- เพิ่มรายการอื่น ๆ ที่นี่ -->
       </tbody>
     </table>
   </div>
+
+  <script>
+    const form = document.getElementById("jobForm");
+    const tableBody = document.getElementById("jobTableBody");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const requester = document.getElementById("requester").value.trim();
+      const jobDesc = document.getElementById("jobDesc").value.trim();
+      const jobDate = document.getElementById("jobDate").value;
+      const remarks = document.getElementById("remarks").value.trim();
+
+      if (requester && jobDesc && jobDate) {
+        const newRow = document.createElement("tr");
+        newRow.className = "hover:bg-gray-100";
+        newRow.innerHTML = `
+          <td class="border border-gray-300 px-4 py-2">${requester}</td>
+          <td class="border border-gray-300 px-4 py-2">${jobDesc}</td>
+          <td class="border border-gray-300 px-4 py-2">${jobDate}</td>
+          <td class="border border-gray-300 px-4 py-2">${remarks || "—"}</td>
+        `;
+        tableBody.appendChild(newRow);
+        form.reset();
+      }
+    });
+  </script>
 </body>
 </html>
