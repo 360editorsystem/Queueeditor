@@ -1,99 +1,138 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <title>📹 ระบบคิวตัดต่อวิดีโอ</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>ระบบคิวตัดต่อวิดีโอ</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 text-sm">
+<body class="bg-gray-100 p-6 text-sm">
 
-  <div class="max-w-4xl mx-auto p-6">
-    <div class="bg-white p-6 rounded-2xl shadow-xl">
-      <h1 class="text-3xl font-bold text-center mb-6 text-blue-700">📹 ระบบคิวตัดต่อวิดีโอ</h1>
+  <div class="max-w-6xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
+    <h1 class="text-2xl font-bold mb-6 text-center">📹 ระบบคิวตัดต่อวิดีโอ</h1>
 
-      <!-- ฟอร์ม -->
-      <form id="jobForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <input id="requester" placeholder="ผู้แจ้งงาน" required class="border p-2 rounded" />
-        <input id="jobDesc" placeholder="รายละเอียดงาน" required class="border p-2 rounded" />
-        <input type="date" id="jobDate" required class="border p-2 rounded" />
-        <input id="remarks" placeholder="หมายเหตุ" class="border p-2 rounded" />
-        <div class="md:col-span-2 text-right">
-          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow">
-            ➕ เพิ่มคิวงาน
-          </button>
-        </div>
-      </form>
-
-      <!-- ตารางแสดงงาน -->
-      <div class="overflow-x-auto">
-        <table class="table-auto w-full border text-center bg-white shadow rounded">
-          <thead class="bg-gray-200">
-            <tr>
-              <th class="p-2">ผู้แจ้ง</th>
-              <th class="p-2">งาน</th>
-              <th class="p-2">วันที่รับงาน</th>
-              <th class="p-2">หมายเหตุ</th>
-            </tr>
-          </thead>
-          <tbody id="jobTable" class="bg-white"></tbody>
-        </table>
+    <!-- ฟอร์ม -->
+    <form id="jobForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <input id="requester" placeholder="ชื่อผู้ขอ" required class="border px-3 py-2 rounded" />
+      <input id="jobDesc" placeholder="รายละเอียดงาน" required class="border px-3 py-2 rounded" />
+      <input type="date" id="jobDate" required class="border px-3 py-2 rounded" />
+      <input id="remarks" placeholder="หมายเหตุ" class="border px-3 py-2 rounded" />
+      <div class="md:col-span-2 text-right">
+        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded">➕ เพิ่มคิวงาน</button>
       </div>
+    </form>
+
+    <!-- สถิติ -->
+    <div class="flex justify-between mb-4 font-medium text-gray-700">
+      <div>งานทั้งหมด: <span id="total">0</span></div>
+      <div>ดำเนินการอยู่: <span id="inprogress">0</span></div>
+      <div>ติดตามงาน: <span id="followup">0</span></div>
+      <div>เสร็จแล้ว: <span id="done">0</span></div>
     </div>
+
+    <!-- ตาราง -->
+    <table class="w-full table-auto border text-center text-sm">
+      <thead class="bg-gray-200">
+        <tr>
+          <th>ชื่อผู้ขอ</th>
+          <th>งาน</th>
+          <th>วันที่รับ</th>
+          <th>หมายเหตุ</th>
+          <th>สถานะ</th>
+          <th>การจัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="jobTable" class="bg-white"></tbody>
+    </table>
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbx0Ll2-JkmXrUyg-9b_fXCf08mJzbUltIrdf7nMhpEE/dev";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzFjSaiULq5nKjnJkDdqMeDX9hv6xKlDkJH76Vtnx0xqxH50LIxswqzkWLt6cDLobZx/exec";
+
     const jobForm = document.getElementById("jobForm");
     const jobTable = document.getElementById("jobTable");
+    const totalEl = document.getElementById("total");
+    const doneEl = document.getElementById("done");
+    const inprogressEl = document.getElementById("inprogress");
+    const followupEl = document.getElementById("followup");
 
-    jobForm.addEventListener("submit", async (e) => {
+    async function loadJobs() {
+      const res = await fetch(API_URL);
+      const jobs = await res.json();
+      renderJobs(jobs);
+    }
+
+    function renderJobs(jobs) {
+      jobTable.innerHTML = "";
+      let total = 0, done = 0, inprogress = 0, followup = 0;
+
+      jobs.forEach(job => {
+        total++;
+        if (job.Status === "สำเร็จ") done++;
+        else if (job.Status === "ดำเนินการอยู่") inprogress++;
+        else if (job.Status === "ติดตามงาน") followup++;
+
+        const tr = document.createElement("tr");
+        tr.className = "border-b";
+
+        tr.innerHTML = `
+          <td>${job.Requester}</td>
+          <td>${job["Job Description"]}</td>
+          <td>${job["Job Received Date"]}</td>
+          <td>${job.Remarks}</td>
+          <td class="text-gray-700 font-semibold">${job.Status || "—"}</td>
+          <td>
+            <select onchange="updateStatus(${job.rowIndex}, this.value)" class="border px-1 py-1 rounded text-sm">
+              <option value="">เปลี่ยนสถานะ</option>
+              <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
+              <option value="ติดตามงาน">ติดตามงาน</option>
+              <option value="สำเร็จ">สำเร็จ</option>
+            </select>
+            <button onclick="deleteJob(${job.rowIndex})" class="text-red-500 ml-2">🗑 ลบ</button>
+          </td>
+        `;
+        jobTable.appendChild(tr);
+      });
+
+      totalEl.textContent = total;
+      doneEl.textContent = done;
+      inprogressEl.textContent = inprogress;
+      followupEl.textContent = followup;
+    }
+
+    jobForm.addEventListener("submit", async e => {
       e.preventDefault();
-
       const job = {
         requester: document.getElementById("requester").value.trim(),
         jobDesc: document.getElementById("jobDesc").value.trim(),
         jobDate: document.getElementById("jobDate").value,
-        remarks: document.getElementById("remarks").value.trim(),
+        remarks: document.getElementById("remarks").value.trim()
       };
-
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          body: JSON.stringify(job),
-          headers: { "Content-Type": "application/json" }
-        });
-        const result = await res.json();
-        alert("✅ เพิ่มคิวงานเรียบร้อยแล้ว!");
-        jobForm.reset();
-        loadJobs();
-      } catch (err) {
-        alert("❌ เกิดข้อผิดพลาด: " + err.message);
-      }
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(job),
+        headers: { "Content-Type": "application/json" }
+      });
+      jobForm.reset();
+      loadJobs();
     });
 
-    async function loadJobs() {
-      try {
-        const res = await fetch(API_URL);
-        const jobs = await res.json();
-        jobTable.innerHTML = "";
-        jobs.forEach(job => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td class="border p-2">${job.requester || ""}</td>
-            <td class="border p-2">${job.jobDesc || ""}</td>
-            <td class="border p-2">${job.jobDate || ""}</td>
-            <td class="border p-2">${job.remarks || ""}</td>
-          `;
-          jobTable.appendChild(row);
-        });
-      } catch (err) {
-        jobTable.innerHTML = `<tr><td colspan="4" class="p-4 text-red-500">⚠️ โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+    async function deleteJob(row) {
+      if (confirm("ต้องการลบรายการนี้หรือไม่?")) {
+        await fetch(`${API_URL}?row=${row}`, { method: "DELETE" });
+        loadJobs();
       }
+    }
+
+    async function updateStatus(row, status) {
+      await fetch(API_URL, {
+        method: "PUT",
+        body: JSON.stringify({ row, status }),
+        headers: { "Content-Type": "application/json" }
+      });
+      loadJobs();
     }
 
     loadJobs();
   </script>
-
 </body>
 </html>
