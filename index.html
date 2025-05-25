@@ -1,138 +1,132 @@
 <!DOCTYPE html>
 <html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>ระบบคิวตัดต่อวิดีโอ</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 p-6 text-sm">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ระบบคิวตัดต่อวิดีโอ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      const API_URL = 'https://script.google.com/macros/s/AKfycbx0Ll2-JkmXrUyg-9b_fXCf08mJzbUltIrdf7nMhpEE/dev';
 
-  <div class="max-w-6xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
-    <h1 class="text-2xl font-bold mb-6 text-center">📹 ระบบคิวตัดต่อวิดีโอ</h1>
+      async function loadJobs() {
+        try {
+          const res = await fetch(API_URL);
+          const jobs = await res.json();
+          const tbody = document.getElementById("jobTable");
+          tbody.innerHTML = "";
 
-    <!-- ฟอร์ม -->
-    <form id="jobForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-      <input id="requester" placeholder="ชื่อผู้ขอ" required class="border px-3 py-2 rounded" />
-      <input id="jobDesc" placeholder="รายละเอียดงาน" required class="border px-3 py-2 rounded" />
-      <input type="date" id="jobDate" required class="border px-3 py-2 rounded" />
-      <input id="remarks" placeholder="หมายเหตุ" class="border px-3 py-2 rounded" />
-      <div class="md:col-span-2 text-right">
-        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded">➕ เพิ่มคิวงาน</button>
-      </div>
-    </form>
+          let total = 0, done = 0;
+          jobs.forEach(job => {
+            total++;
+            if (job.Status === "สำเร็จ") done++;
+            const tr = document.createElement("tr");
+            tr.className = "border-b hover:bg-gray-100";
+            tr.innerHTML = `
+              <td class="p-2">${job.Requester}</td>
+              <td class="p-2">${job["Job Description"]}</td>
+              <td class="p-2">${job["Job Received Date"]}</td>
+              <td class="p-2">${job.Remarks}</td>
+              <td class="p-2 font-semibold ${job.Status === 'สำเร็จ' ? 'text-green-600' : job.Status === 'ติดตามงาน' ? 'text-pink-600' : 'text-yellow-600'}">${job.Status}</td>
+              <td class="p-2 space-x-1 text-center">
+                <button onclick="updateStatus(${job.rowIndex}, 'ดำเนินการอยู่')" class="bg-yellow-300 hover:bg-yellow-400 px-2 py-1 rounded">🛠</button>
+                <button onclick="updateStatus(${job.rowIndex}, 'ติดตามงาน')" class="bg-pink-300 hover:bg-pink-400 px-2 py-1 rounded">🔔</button>
+                <button onclick="updateStatus(${job.rowIndex}, 'สำเร็จ')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">✅</button>
+                <button onclick="deleteJob(${job.rowIndex})" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded">🗑</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
 
-    <!-- สถิติ -->
-    <div class="flex justify-between mb-4 font-medium text-gray-700">
-      <div>งานทั้งหมด: <span id="total">0</span></div>
-      <div>ดำเนินการอยู่: <span id="inprogress">0</span></div>
-      <div>ติดตามงาน: <span id="followup">0</span></div>
-      <div>เสร็จแล้ว: <span id="done">0</span></div>
-    </div>
-
-    <!-- ตาราง -->
-    <table class="w-full table-auto border text-center text-sm">
-      <thead class="bg-gray-200">
-        <tr>
-          <th>ชื่อผู้ขอ</th>
-          <th>งาน</th>
-          <th>วันที่รับ</th>
-          <th>หมายเหตุ</th>
-          <th>สถานะ</th>
-          <th>การจัดการ</th>
-        </tr>
-      </thead>
-      <tbody id="jobTable" class="bg-white"></tbody>
-    </table>
-  </div>
-
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzFjSaiULq5nKjnJkDdqMeDX9hv6xKlDkJH76Vtnx0xqxH50LIxswqzkWLt6cDLobZx/exec";
-
-    const jobForm = document.getElementById("jobForm");
-    const jobTable = document.getElementById("jobTable");
-    const totalEl = document.getElementById("total");
-    const doneEl = document.getElementById("done");
-    const inprogressEl = document.getElementById("inprogress");
-    const followupEl = document.getElementById("followup");
-
-    async function loadJobs() {
-      const res = await fetch(API_URL);
-      const jobs = await res.json();
-      renderJobs(jobs);
-    }
-
-    function renderJobs(jobs) {
-      jobTable.innerHTML = "";
-      let total = 0, done = 0, inprogress = 0, followup = 0;
-
-      jobs.forEach(job => {
-        total++;
-        if (job.Status === "สำเร็จ") done++;
-        else if (job.Status === "ดำเนินการอยู่") inprogress++;
-        else if (job.Status === "ติดตามงาน") followup++;
-
-        const tr = document.createElement("tr");
-        tr.className = "border-b";
-
-        tr.innerHTML = `
-          <td>${job.Requester}</td>
-          <td>${job["Job Description"]}</td>
-          <td>${job["Job Received Date"]}</td>
-          <td>${job.Remarks}</td>
-          <td class="text-gray-700 font-semibold">${job.Status || "—"}</td>
-          <td>
-            <select onchange="updateStatus(${job.rowIndex}, this.value)" class="border px-1 py-1 rounded text-sm">
-              <option value="">เปลี่ยนสถานะ</option>
-              <option value="ดำเนินการอยู่">ดำเนินการอยู่</option>
-              <option value="ติดตามงาน">ติดตามงาน</option>
-              <option value="สำเร็จ">สำเร็จ</option>
-            </select>
-            <button onclick="deleteJob(${job.rowIndex})" class="text-red-500 ml-2">🗑 ลบ</button>
-          </td>
-        `;
-        jobTable.appendChild(tr);
-      });
-
-      totalEl.textContent = total;
-      doneEl.textContent = done;
-      inprogressEl.textContent = inprogress;
-      followupEl.textContent = followup;
-    }
-
-    jobForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      const job = {
-        requester: document.getElementById("requester").value.trim(),
-        jobDesc: document.getElementById("jobDesc").value.trim(),
-        jobDate: document.getElementById("jobDate").value,
-        remarks: document.getElementById("remarks").value.trim()
-      };
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify(job),
-        headers: { "Content-Type": "application/json" }
-      });
-      jobForm.reset();
-      loadJobs();
-    });
-
-    async function deleteJob(row) {
-      if (confirm("ต้องการลบรายการนี้หรือไม่?")) {
-        await fetch(`${API_URL}?row=${row}`, { method: "DELETE" });
-        loadJobs();
+          document.getElementById("total").textContent = total;
+          document.getElementById("done").textContent = done;
+          document.getElementById("pending").textContent = total - done;
+        } catch (e) {
+          alert("❌ เกิดข้อผิดพลาดในการโหลดข้อมูล: " + e);
+        }
       }
-    }
 
-    async function updateStatus(row, status) {
-      await fetch(API_URL, {
-        method: "PUT",
-        body: JSON.stringify({ row, status }),
-        headers: { "Content-Type": "application/json" }
-      });
-      loadJobs();
-    }
+      async function submitJob() {
+        const job = {
+          requester: document.getElementById("requester").value,
+          jobDesc: document.getElementById("jobDesc").value,
+          jobDate: document.getElementById("jobDate").value,
+          remarks: document.getElementById("remarks").value
+        };
+        try {
+          await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify(job),
+            headers: { "Content-Type": "application/json" }
+          });
+          document.getElementById("jobForm").reset();
+          loadJobs();
+        } catch (e) {
+          alert("❌ ไม่สามารถเพิ่มข้อมูลได้: " + e);
+        }
+      }
 
-    loadJobs();
-  </script>
-</body>
+      async function updateStatus(row, status) {
+        try {
+          await fetch(API_URL, {
+            method: "PUT",
+            body: JSON.stringify({ row, status }),
+            headers: { "Content-Type": "application/json" }
+          });
+          loadJobs();
+        } catch (e) {
+          alert("❌ ไม่สามารถอัปเดตสถานะได้: " + e);
+        }
+      }
+
+      async function deleteJob(row) {
+        if (confirm("ลบรายการนี้ใช่หรือไม่?")) {
+          try {
+            await fetch(`${API_URL}?row=${row}`, { method: "DELETE" });
+            loadJobs();
+          } catch (e) {
+            alert("❌ ไม่สามารถลบข้อมูลได้: " + e);
+          }
+        }
+      }
+
+      window.onload = loadJobs;
+    </script>
+  </head>
+  <body class="bg-gray-50 text-sm font-sans">
+    <div class="max-w-5xl mx-auto p-6 bg-white shadow-lg rounded-xl mt-8">
+      <h1 class="text-2xl font-bold mb-6 text-center text-blue-600">📹 ระบบคิวตัดต่อวิดีโอ</h1>
+
+      <form id="jobForm" onsubmit="event.preventDefault(); submitJob();" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <input id="requester" required placeholder="ผู้แจ้งงาน" class="border p-2 rounded" />
+        <input id="jobDesc" required placeholder="รายละเอียดงาน" class="border p-2 rounded" />
+        <input id="jobDate" type="date" required class="border p-2 rounded" />
+        <input id="remarks" placeholder="หมายเหตุ" class="border p-2 rounded" />
+        <div class="md:col-span-2 text-right">
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">➕ เพิ่มคิวงาน</button>
+        </div>
+      </form>
+
+      <div class="flex justify-between font-medium mb-4">
+        <div>ทั้งหมด: <span id="total">0</span></div>
+        <div>สำเร็จ: <span id="done">0</span></div>
+        <div>ค้างอยู่: <span id="pending">0</span></div>
+      </div>
+
+      <div class="overflow-auto max-h-[500px]">
+        <table class="w-full border text-center">
+          <thead class="bg-gray-200 sticky top-0">
+            <tr>
+              <th class="p-2">ผู้แจ้ง</th>
+              <th class="p-2">งาน</th>
+              <th class="p-2">วันที่</th>
+              <th class="p-2">หมายเหตุ</th>
+              <th class="p-2">สถานะ</th>
+              <th class="p-2">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="jobTable" class="bg-white"></tbody>
+        </table>
+      </div>
+    </div>
+  </body>
 </html>
