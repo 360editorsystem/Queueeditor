@@ -2,180 +2,98 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
+  <title>📹 ระบบคิวตัดต่อวิดีโอ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ระบบคิวตัดต่อวิดีโอ</title>
-  <style>
-    body {
-      font-family: "Prompt", sans-serif;
-      background: #f9f9fb;
-      color: #333;
-      margin: 0;
-      padding: 2rem;
-    }
-    .container {
-      max-width: 900px;
-      margin: auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-    h1, h2 {
-      text-align: center;
-      color: #3f51b5;
-    }
-    label {
-      display: block;
-      margin-top: 1rem;
-      font-weight: bold;
-    }
-    input, textarea, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-      font-size: 1rem;
-    }
-    button {
-      background: #3f51b5;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      margin-top: 1rem;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #303f9f;
-    }
-    table {
-      width: 100%;
-      margin-top: 2rem;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-    th {
-      background: #e8eaf6;
-      font-weight: bold;
-    }
-    .status-btn {
-      padding: 6px 12px;
-      margin: 2px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      border: none;
-      color: white;
-    }
-    .pending { background: #ff9800; }
-    .processing { background: #2196f3; }
-    .followup { background: #9c27b0; }
-    .done { background: #4caf50; }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div class="container">
-    <h1>📄 ระบบคิวตัดต่อวิดีโอ</h1>
-    <form id="queueForm">
-      <label>ชื่อแจ้ง</label>
-      <input type="text" name="requester" required />
+<body class="bg-gray-100 text-sm">
 
-      <label>รายละเอียดงาน</label>
-      <textarea name="jobDesc" rows="3"></textarea>
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="bg-white p-6 rounded-2xl shadow-xl">
+      <h1 class="text-3xl font-bold text-center mb-6 text-blue-700">📹 ระบบคิวตัดต่อวิดีโอ</h1>
 
-      <label>วันที่ต้องการ</label>
-      <input type="date" name="jobDate" />
+      <!-- ฟอร์ม -->
+      <form id="jobForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <input id="requester" placeholder="ผู้แจ้งงาน" required class="border p-2 rounded" />
+        <input id="jobDesc" placeholder="รายละเอียดงาน" required class="border p-2 rounded" />
+        <input type="date" id="jobDate" required class="border p-2 rounded" />
+        <input id="remarks" placeholder="หมายเหตุ" class="border p-2 rounded" />
+        <div class="md:col-span-2 text-right">
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow">
+            ➕ เพิ่มคิวงาน
+          </button>
+        </div>
+      </form>
 
-      <label>หมายเหตุ</label>
-      <textarea name="remarks" rows="2"></textarea>
-
-      <button type="submit">✉️ ส่งรายการ</button>
-    </form>
-
-    <h2>📄 รายการที่แจ้งไว้</h2>
-    <table id="queueTable">
-      <thead>
-        <tr>
-          <th>เวลาแจ้ง</th>
-          <th>ผู้แจ้ง</th>
-          <th>งาน</th>
-          <th>วันที่ต้องการ</th>
-          <th>หมายเหตุ</th>
-          <th>สถานะ</th>
-          <th>เปลี่ยนสถานะ</th>
-        </tr>
-      </thead>
-      <tbody id="queueBody"></tbody>
-    </table>
+      <!-- ตารางแสดงงาน -->
+      <div class="overflow-x-auto">
+        <table class="table-auto w-full border text-center bg-white shadow rounded">
+          <thead class="bg-gray-200">
+            <tr>
+              <th class="p-2">ผู้แจ้ง</th>
+              <th class="p-2">งาน</th>
+              <th class="p-2">วันที่รับงาน</th>
+              <th class="p-2">หมายเหตุ</th>
+            </tr>
+          </thead>
+          <tbody id="jobTable" class="bg-white"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_ID/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbx0Ll2-JkmXrUyg-9b_fXCf08mJzbUltIrdf7nMhpEE/dev";
+    const jobForm = document.getElementById("jobForm");
+    const jobTable = document.getElementById("jobTable");
 
-    document.getElementById("queueForm").addEventListener("submit", async (e) => {
+    jobForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const form = new FormData(e.target);
-      const data = Object.fromEntries(form.entries());
+
+      const job = {
+        requester: document.getElementById("requester").value.trim(),
+        jobDesc: document.getElementById("jobDesc").value.trim(),
+        jobDate: document.getElementById("jobDate").value,
+        remarks: document.getElementById("remarks").value.trim(),
+      };
 
       try {
         const res = await fetch(API_URL, {
           method: "POST",
-          body: JSON.stringify(data),
-          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(job),
+          headers: { "Content-Type": "application/json" }
         });
-        const result = await res.text();
-        alert("บันทึกสำเร็จ: " + result);
-        e.target.reset();
-        loadData();
+        const result = await res.json();
+        alert("✅ เพิ่มคิวงานเรียบร้อยแล้ว!");
+        jobForm.reset();
+        loadJobs();
       } catch (err) {
-        alert("❌ เกิดข้อผิด: " + err);
+        alert("❌ เกิดข้อผิดพลาด: " + err.message);
       }
     });
 
-    async function loadData() {
+    async function loadJobs() {
       try {
         const res = await fetch(API_URL);
-        const items = await res.json();
-        const tbody = document.getElementById("queueBody");
-        tbody.innerHTML = "";
-
-        items.forEach((row) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${row.timestamp || ""}</td>
-            <td>${row.requester || ""}</td>
-            <td>${row.jobDesc || ""}</td>
-            <td>${row.jobDate || ""}</td>
-            <td>${row.remarks || ""}</td>
-            <td>${row.status || "pending"}</td>
-            <td>
-              <button class="status-btn processing" onclick="updateStatus(${row.rowIndex}, 'processing')">ดำเนินการอยู่</button>
-              <button class="status-btn followup" onclick="updateStatus(${row.rowIndex}, 'followup')">ติดตามงาน</button>
-              <button class="status-btn done" onclick="updateStatus(${row.rowIndex}, 'done')">สำเร็จ</button>
-            </td>`;
-          tbody.appendChild(tr);
+        const jobs = await res.json();
+        jobTable.innerHTML = "";
+        jobs.forEach(job => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td class="border p-2">${job.requester || ""}</td>
+            <td class="border p-2">${job.jobDesc || ""}</td>
+            <td class="border p-2">${job.jobDate || ""}</td>
+            <td class="border p-2">${job.remarks || ""}</td>
+          `;
+          jobTable.appendChild(row);
         });
       } catch (err) {
-        console.error("Load failed", err);
+        jobTable.innerHTML = `<tr><td colspan="4" class="p-4 text-red-500">⚠️ โหลดข้อมูลไม่สำเร็จ</td></tr>`;
       }
     }
 
-    async function updateStatus(rowIndex, newStatus) {
-      try {
-        await fetch(API_URL + `?updateRow=${rowIndex}&newStatus=${newStatus}`);
-        loadData();
-      } catch (err) {
-        alert("❌ Update failed: " + err);
-      }
-    }
-
-    loadData();
+    loadJobs();
   </script>
+
 </body>
 </html>
